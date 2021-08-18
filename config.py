@@ -46,7 +46,7 @@ var['local']['price_feature'] = 'Avg_Unit_Price'
  
 
 var['prod'] = {}
-var['prod']['files'] = ['premium_brand.csv','competitor_A.csv','competitor_B.csv','competitor_C.csv','private_label.csv']
+var['prod']['files'] = ['https://raw.githubusercontent.com/acceval/choice-model/main/premium_brand.csv','https://raw.githubusercontent.com/acceval/choice-model/main/competitor_A.csv','https://raw.githubusercontent.com/acceval/choice-model/main/competitor_B.csv','https://raw.githubusercontent.com/acceval/choice-model/main/competitor_C.csv','https://raw.githubusercontent.com/acceval/choice-model/main/private_label.csv']
 var['prod']['players'] = ['premium_brand','competitor_A','competitor_B','competitor_C','private_label']
 var['prod']['features'] = ['Avg_Unit_Price','Avg_Number_Of_Stores_Selling','Units','Feat_Disp_Units','Feat_Wo_Disp_Units','Disp_Wo_Feat_Units','Distinct_Count_of_Units']
 var['prod']['volume'] = 'Units'

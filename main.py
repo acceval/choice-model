@@ -156,7 +156,7 @@ if __name__== '__main__':
 	
 	if files is not None and players is not None and features is not None:
 
-		model = Model(env, files, players, features, ['volume'],relative_features, price_feature)		
+		model = Model(env, files, players, features, volume,relative_features, price_feature)		
 		output = model.choice_model()
 		print(type(output))
 		print(output)		
