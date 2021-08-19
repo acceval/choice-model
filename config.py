@@ -18,7 +18,7 @@ UPPER_BOUND = 10000
 
 
 
-# LOCAL_URL = 'http://127.0.0.1:5050/'
+LOCAL_URL = 'http://127.0.0.1:5050/'
 # HEROKU_URL = 'https://price-segmentation.herokuapp.com/'
 
 

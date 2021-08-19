@@ -140,8 +140,9 @@ class Model:
 
 					return status, error
 
-				# volume feature exists	
 
+				# volume feature exists	
+				# print('self.volume:',self.volume)
 				if isinstance(self.volume,str):
 
 					if not self.volume in list(cols):
@@ -156,6 +157,8 @@ class Model:
 						return status, error
 
 				else:
+
+					print('b')
 
 					msg = 'wrong type of data for '+self.volume
 					self.log.print_(msg)
@@ -487,10 +490,9 @@ class Model:
 			self.calculate_time(data.shape[0])
 
 			# optimization 			
-			# self.choice_model_parameters = self.optimize_choice_model()
+			self.choice_model_parameters = self.optimize_choice_model()			
 			# self.choice_model_parameters.to_csv('choice_model.csv')
-
-			self.choice_model_parameters = pd.read_csv('choice_model.csv',encoding='utf-8')
+			# self.choice_model_parameters = pd.read_csv('choice_model.csv',encoding='utf-8')
 			# print(self.choice_model_parameters)
 
 			# recalculate utility 
@@ -549,9 +551,9 @@ class Model:
 			self.calculate_market()
 
 			# optimization 			
-			# self.market_parameters = self.optimize_market()
+			self.market_parameters = self.optimize_market()
 			# self.market_parameters.to_csv('market.csv',index=False)
-			self.market_parameters = pd.read_csv('market.csv',encoding='utf-8')
+			# self.market_parameters = pd.read_csv('market.csv',encoding='utf-8')
 
 			# print(self.market_parameters)
 

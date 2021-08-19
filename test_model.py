@@ -6,7 +6,7 @@ import requests
 from config import var
 import pandas as pd
 
-env = 'local'
+env = 'prod'
 
 # default vars
 files = var[env]['files']
