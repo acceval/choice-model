@@ -48,7 +48,14 @@ curl -X POST -H 'Accept: application/json' -H 'Accept-Encoding: gzip, deflate' -
 
 #### With Constraint
 
+##### How To Call
+
 ```
 curl -X POST -H 'Accept: application/json' -H 'Accept-Encoding: gzip, deflate' -H 'Connection: keep-alive' -H 'Content-Length: 1032' -H 'Content-type: application/json' -H 'User-Agent: python-requests/2.26.0' -d '{"files" :["https://raw.githubusercontent.com/acceval/choice-model/main/premium_brand.csv", "https://raw.githubusercontent.com/acceval/choice-model/main/competitor_A.csv", "https://raw.githubusercontent.com/acceval/choice-model/main/competitor_B.csv", "https://raw.githubusercontent.com/acceval/choice-model/main/competitor_C.csv", "https://raw.githubusercontent.com/acceval/choice-model/main/private_label.csv"], "me":"premium_brand","players":["premium_brand", "competitor_A", "competitor_B", "competitor_C", "private_label"], "features":["Avg_Unit_Price", "Avg_Number_Of_Stores_Selling", "Units", "Feat_Disp_Units", "Feat_Wo_Disp_Units", "Disp_Wo_Feat_Units", "Distinct_Count_of_Units"], "volume":"Units", "relative_features":["Feat_Disp_Units", "Feat_Wo_Disp_Units", "Disp_Wo_Feat_Units"], "price_feature":"Avg_Unit_Price", "data_period":"weekly", "n_period_after_the_last_date":"3", "n_future":"5","prices":[4.0, 6.98, 2.99, 5.45, 3.51],"price_inc":"0.1","price_steps":"13","cogs":"2.5","obj":"max share","cons":"share > 0.15"}' https://choice-model.herokuapp.com/choice_model
 ```
 
+##### Sample Output
+
+```
+{\"status\": 1, \"error\": \"\", \"data\": [{\"2.9130732375085646\": {\"with_constraint\": {\"max share\": {\"at_price\": 4.0, \"max_val\": 0.20282909434127847}}}, \"2.9322381930184895\": {\"with_constraint\": {\"max share\": {\"at_price\": 4.0, \"max_val\": 0.20282909434127847}}}, \"2.9514031485284145\": {\"with_constraint\": {\"max share\": {\"at_price\": 4.0, \"max_val\": 0.20282909434127847}}}, \"2.9705681040383394\": {\"with_constraint\": {\"max share\": {\"at_price\": 4.0, \"max_val\": 0.20282909434127847}}}, \"2.9897330595482643\": {\"with_constraint\": {\"max share\": {\"at_price\": 4.0, \"max_val\": 0.20282909434127847}}}}]}
+```
