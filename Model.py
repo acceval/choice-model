@@ -519,7 +519,7 @@ class Model:
 
 				return status, error
 
-			if self.cons.split(' ')[1] not in ['>','>=','!=','<','<=']:
+			if self.cons.split(' ')[1] not in ['>','>=','!=','==','<','<=']:
 
 				msg = 'Constraint parameter does not follow the correct format.'
 				self.log.print_(msg)
