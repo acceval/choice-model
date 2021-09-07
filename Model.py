@@ -23,6 +23,8 @@ from scipy.optimize import minimize
 from collections import deque
 import pandasql as psql
 
+from numba import jit, float64, int64
+
 class Model:
 
 	def __init__(self, env, files, players, me, features, volume, relative_features, price_feature,n_period_after_the_last_date,data_period,n_future,prices,price_inc,price_steps,cogs,obj,cons=None): 
@@ -598,17 +600,22 @@ class Model:
 			else:        
 				self.Time.append(self.Time[-1]+7/365.25)
 
+
 	def optimize_choice_model(self):
+
+		"""
+			parallel processing
+		"""
 
 		msg = self.__class__.__name__+'.'+utils.get_function_caller()
 		self.log.print_(msg)
 		print(msg)
 
-
+		# @jit(float64(float64[:]), nopython=False, parallel=True)
 		def f(x):
 
 			# reshape to number of players x (number of features + 1 more feature which is Time + 1 more feature which is Intercept)
-			x  = np.reshape(x, (len(self.players),len(self.features)+1+1))
+			# x  = np.reshape(x, (len(self.players),len(self.features)+1+1))
 
 			#calculate utility from each player
 
@@ -619,13 +626,18 @@ class Model:
 				df = self.df[player][self.features]
 				df.insert(loc=0, column='Time', value=self.Time)
 				
-				utility = np.exp(x[i][0]+(df.values*x[i][1:]).sum(axis=1))				
+
+				x_ = i*(len(self.features)+1+1)
+				utility = np.exp(x[x_+0]+(df.values*x[x_+1:x_+len(self.features)+1+1]).sum(axis=1))				
+
+
 
 				df['utility'] = utility
 
 				Utilities[player] = utility
 			
 			Utilities_df = pd.DataFrame(Utilities)
+
 
 			Share_df = Utilities_df.copy()
 			for col in Share_df.columns:
@@ -655,17 +667,19 @@ class Model:
 
 			return Error_df.to_numpy().sum()
 
+		@jit(float64[:](float64[:]), nopython=False, parallel=True)
 		def objective(x):
 			# minus sign means the opposite of minimize
 			return -f(x)
 
 
 		
-		# initialize initial values: (number of features + 1 more feature which is Time + 1 more feature which is Intercept)
+		# # initialize initial values: (number of features + 1 more feature which is Time + 1 more feature which is Intercept)
 		x0 = np.empty(shape=(len(self.players),len(self.features)+1+1))
+		x0 = x0.reshape(-1,)
 		x0.fill(config.CHOICE_MODEL_INITIAL_VALUE)
 
-		sol = minimize(objective,x0,options={'disp':True})
+		sol = minimize(objective,x0,options={'disp':False})
 
 		xOpt = sol.x
 
@@ -675,6 +689,88 @@ class Model:
 		params_df.index = ['Intercept','Time']+self.features
 		
 		return params_df
+
+	# def optimize_choice_model(self):
+
+	# 	msg = self.__class__.__name__+'.'+utils.get_function_caller()
+	# 	self.log.print_(msg)
+	# 	print(msg)
+
+
+	# 	def f(x):
+
+	# 		"""
+	# 		original version
+	# 		"""
+
+	# 		# reshape to number of players x (number of features + 1 more feature which is Time + 1 more feature which is Intercept)
+	# 		x  = np.reshape(x, (len(self.players),len(self.features)+1+1))
+
+	# 		#calculate utility from each player
+
+	# 		Utilities = dict()
+
+	# 		for i, player in enumerate(self.players):
+
+	# 			df = self.df[player][self.features]
+	# 			df.insert(loc=0, column='Time', value=self.Time)
+				
+	# 			utility = np.exp(x[i][0]+(df.values*x[i][1:]).sum(axis=1))				
+
+	# 			df['utility'] = utility
+
+	# 			Utilities[player] = utility
+			
+	# 		Utilities_df = pd.DataFrame(Utilities)
+
+	# 		Share_df = Utilities_df.copy()
+	# 		for col in Share_df.columns:
+
+	# 			if col!='total':
+	# 				Share_df[col] = Share_df[col]/Utilities_df.sum(axis=1)
+
+	# 		Error_df = Share_df.copy()
+	# 		Error_df = Error_df.applymap(np.log)
+
+	# 		# print(Error_df)
+	# 		# print(self.volume_per_player)
+			
+	# 		Error_df.reset_index(inplace=True)
+	# 		self.volume_per_player.reset_index(inplace=True)
+
+	# 		if 'index' in Error_df.columns:
+	# 			del Error_df['index']
+
+	# 		if 'index' in self.volume_per_player.columns:
+	# 			del self.volume_per_player['index']
+
+			
+	# 		for i, col in enumerate(Error_df.columns):
+
+	# 			Error_df[col] = Error_df[col]*self.volume_per_player.iloc[:,i]
+
+	# 		return Error_df.to_numpy().sum()
+
+	# 	def objective(x):
+	# 		# minus sign means the opposite of minimize
+	# 		return -f(x)
+
+
+		
+	# 	# initialize initial values: (number of features + 1 more feature which is Time + 1 more feature which is Intercept)
+	# 	x0 = np.empty(shape=(len(self.players),len(self.features)+1+1))
+	# 	x0.fill(config.CHOICE_MODEL_INITIAL_VALUE)
+
+	# 	sol = minimize(objective,x0,options={'disp':True})
+
+	# 	xOpt = sol.x
+
+	# 	params = np.reshape(xOpt, (len(self.players),len(self.features)+1+1))
+	# 	params_df = pd.DataFrame(params).T
+	# 	params_df.columns = self.players
+	# 	params_df.index = ['Intercept','Time']+self.features
+		
+	# 	return params_df
 
 	def add_sin_cos_columns(self,df):
 
@@ -760,10 +856,15 @@ class Model:
 
 	def optimize_market(self):
 
+		"""
+			parallel programming
+		"""
+
 		msg = self.__class__.__name__+'.'+utils.get_function_caller()
 		self.log.print_(msg)
 		print(msg)
 
+		@jit(float64(float64[:]), nopython=False, parallel=True)
 		def f(x):
 
 			models = dict()	    	
@@ -783,12 +884,12 @@ class Model:
 
 			return df['loss'].sum()
 			
+		@jit(float64(float64[:]), nopython=False, parallel=True)
 		def objective(x):
 			# minus sign means the opposite of minimize
 			return f(x)
 
-		x0 = np.array([config.CHOICE_MODEL_INITIAL_VALUE]*int(len(self.market.columns)-1))
-		print(len(x0))
+		x0 = np.array([config.CHOICE_MODEL_INITIAL_VALUE]*int(len(self.market.columns)-1))		
 
 		bounds = ((config.LOWER_BOUND,config.UPPER_BOUND),)*len(x0)
 		bounds = list(bounds)	
@@ -797,7 +898,7 @@ class Model:
 		bounds[price_index] = (config.LOWER_BOUND,0)
 		bounds = tuple(bounds)
 		
-		sol = minimize(objective,x0,options={'disp':True},bounds=bounds)
+		sol = minimize(objective,x0,options={'disp':False},bounds=bounds)
 
 		xOpt = sol.x
 
@@ -808,6 +909,61 @@ class Model:
 		# print(params_df)
 		
 		return params_df
+
+	# def optimize_market(self):
+
+	# 	"""
+	# 		regular model
+	# 	"""
+
+	# 	msg = self.__class__.__name__+'.'+utils.get_function_caller()
+	# 	self.log.print_(msg)
+	# 	print(msg)
+
+	# 	def f(x):
+
+	# 		models = dict()	    	
+	# 		models['Time'] = x[0]
+
+	# 		for i,col in enumerate(self.market.columns[0:-1]):        
+
+	# 			if i>0:
+				
+	# 				models[col] = np.array(self.market[col],dtype=float)*x[i]
+			
+	# 		models_df = pd.DataFrame(models)
+	# 		models_df['Model'] = models_df.sum(axis=1)
+	
+	# 		df = pd.DataFrame(np.column_stack([list(models_df['Model']),list(self.market['Actual'])]),columns=['Model','Actual'])
+	# 		df['loss'] = (df['Actual']-df['Model'])*(df['Actual']-df['Model'])
+
+	# 		return df['loss'].sum()
+			
+	# 	def objective(x):
+	# 		# minus sign means the opposite of minimize
+	# 		return f(x)
+
+	# 	x0 = np.array([config.CHOICE_MODEL_INITIAL_VALUE]*int(len(self.market.columns)-1))
+	# 	print(len(x0))
+
+	# 	bounds = ((config.LOWER_BOUND,config.UPPER_BOUND),)*len(x0)
+	# 	bounds = list(bounds)	
+	# 	# print(self.market.columns)			
+	# 	price_index = list(self.market.columns).index(self.price_feature)
+	# 	bounds[price_index] = (config.LOWER_BOUND,0)
+	# 	bounds = tuple(bounds)
+		
+	# 	sol = minimize(objective,x0,options={'disp':True},bounds=bounds)
+
+	# 	xOpt = sol.x
+
+	# 	# params = np.reshape(xOpt, (len(self.players),len(self.features)+1+1))
+	# 	params = xOpt
+	# 	params_df = pd.DataFrame(params).T
+	# 	params_df.columns = self.market.columns[0:-1]
+	# 	# print(params_df)
+		
+	# 	return params_df
 
 
 	def time_cos_calc(self,col,time):
@@ -988,9 +1144,10 @@ class Model:
 			for file, player in zip(self.files,self.players):
 			
 				data = pd.read_csv(file,encoding='utf-16')
+				# data = pd.read_csv(file)
 				
 				# for demo purpose
-				data = data[data.index>=data[data['Date']=='12 March, 2016'].index[0]] 
+				# data = data[data.index>=data[data['Date']=='12 March, 2016'].index[0]] 
 
 				for col in self.features+[self.volume]:
 
@@ -1020,8 +1177,12 @@ class Model:
 
 			self.calculate_time(data.shape[0])
 
-			# optimization 			
+			print(len(self.features),self.features)
+
+		# 	# optimization 			
 			self.choice_model_parameters = self.optimize_choice_model()			
+			print('self.choice_model_parameters:')
+			print(self.choice_model_parameters)
 			# self.choice_model_parameters.to_csv('choice_model.csv')
 			# self.choice_model_parameters = pd.read_csv('choice_model.csv',encoding='utf-8')
 			# print(self.choice_model_parameters)
@@ -1087,7 +1248,8 @@ class Model:
 			self.market_parameters = self.optimize_market()
 			# self.market_parameters.to_csv('market.csv',index=False)
 			# self.market_parameters = pd.read_csv('market.csv',encoding='utf-8')
-			# print(self.market_parameters.values[0])
+			print('self.market_parameters:')
+			print(self.market_parameters)
 
 			#future market -- simulation
 			future_df = self.get_future()			
