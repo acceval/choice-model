@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request
 from flask_restful import Api, Resource, reqparse
 import json
 
-from Model import Model 
+from Model import Model
 
 
 app = Flask(__name__)
@@ -15,33 +15,33 @@ parser.add_argument('list', type=list)
 
 @app.route('/')
 def hello():
-	
+
 	return jsonify('Welcome to Choice Model')
 
 @app.route('/choice_model', methods=['POST'])
 def choice_model():
 
 	ABC = parser.parse_args()
-	data_decoded = request.data.decode("utf-8") 
+	data_decoded = request.data.decode("utf-8")
 
 	#convert to json
 	data_json = json.loads(data_decoded)
 
-	# --files premium_brand.csv competitor_A.csv competitor_B.csv competitor_C.csv private_label.csv 
+	# --files premium_brand.csv competitor_A.csv competitor_B.csv competitor_C.csv private_label.csv
 	# -- me premium_brand
-	# --players premium_brand competitor_A competitor_B competitor_C private_label 
-	# --features Avg_Unit_Price Avg_Number_Of_Stores_Selling Units	Feat_Disp_Units	Feat_Wo_Disp_Units	Disp_Wo_Feat_Units	Distinct_Count_of_Units 
-	# --volume Units 
-	# --relative_features Feat_Disp_Units	Feat_Wo_Disp_Units	Disp_Wo_Feat_Units 
+	# --players premium_brand competitor_A competitor_B competitor_C private_label
+	# --features Avg_Unit_Price Avg_Number_Of_Stores_Selling Units	Feat_Disp_Units	Feat_Wo_Disp_Units	Disp_Wo_Feat_Units	Distinct_Count_of_Units
+	# --volume Units
+	# --relative_features Feat_Disp_Units	Feat_Wo_Disp_Units	Disp_Wo_Feat_Units
 	# --price_feature Avg_Unit_Price
-	# --data_period weekly 
-	# --n_period_after_the_last_date 3 
-	# --n_future 5 
-	# --prices 4.00 6.98	2.99 5.45 3.51 
-	# --price_inc 0.10 
-	# --price_steps 13 
-	# --cogs 2.5 
-	# --obj "max share" 
+	# --data_period weekly
+	# --n_period_after_the_last_date 3
+	# --n_future 5
+	# --prices 4.00 6.98	2.99 5.45 3.51
+	# --price_inc 0.10
+	# --price_steps 13
+	# --cogs 2.5
+	# --obj "max share"
 	# --cons "share > 0.15"
 
 
@@ -56,12 +56,12 @@ def choice_model():
 		me = data_json['me']
 	else:
 		me = ''
-	
+
 	if 'players' in  data_json:
 		players = data_json['players']
 	else:
 		players = ''
-	
+
 	if 'features' in  data_json:
 		features = data_json['features']
 	else:
@@ -132,8 +132,8 @@ def choice_model():
 
 
 		if cons=='':
-		
-			model = Model('prod', files, players, me, features, volume,relative_features, price_feature,n_period_after_the_last_date,data_period,n_future,prices,price_inc,price_steps,cogs,obj)		
+
+			model = Model('prod', files, players, me, features, volume,relative_features, price_feature,n_period_after_the_last_date,data_period,n_future,prices,price_inc,price_steps,cogs,obj)
 			output = model.choice_model()
 			output = json.dumps(output)
 
@@ -141,7 +141,7 @@ def choice_model():
 
 		else:
 
-			model = Model('prod', files, players, me, features, volume,relative_features, price_feature,n_period_after_the_last_date,data_period,n_future,prices,price_inc,price_steps,cogs,obj,cons)		
+			model = Model('prod', files, players, me, features, volume,relative_features, price_feature,n_period_after_the_last_date,data_period,n_future,prices,price_inc,price_steps,cogs,obj,cons)
 			output = model.choice_model()
 			output = json.dumps(output)
 			# return jsonify(output)
@@ -149,7 +149,7 @@ def choice_model():
 
 	else:
 
-		status = 0 
+		status = 0
 		error = 'There is a problem on the parameters'
 		data = None
 
@@ -167,8 +167,7 @@ def choice_model():
 
 if __name__ == '__main__':
 	port = int(os.environ.get("PORT", 5050))
-	#app.run(host='0.0.0.0', port = port, debug=True)
+	app.run(host='0.0.0.0', port = port, debug=True)
 
 	# local
-	app.run(host='127.0.0.1', port = port, debug=True)
-	
+	# app.run(host='127.0.0.1', port = port, debug=True)
