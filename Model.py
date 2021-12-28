@@ -23,7 +23,7 @@ from scipy.optimize import minimize
 from collections import deque
 import pandasql as psql
 
-from numba import jit, float64, int64
+	
 
 class Model:
 
@@ -492,8 +492,8 @@ class Model:
 
 		if self.cons is not None:
 
-			print(self.cons)
-			print(len(self.cons.split(' ')))
+			# print(self.cons)
+			# print(len(self.cons.split(' ')))
 
 
 			if len(self.cons.split(' '))!=3:
@@ -667,7 +667,7 @@ class Model:
 
 			return Error_df.to_numpy().sum()
 
-		@jit(float64[:](float64[:]), nopython=False, parallel=True)
+		# @jit(float64[:](float64[:]), nopython=False, parallel=True)
 		def objective(x):
 			# minus sign means the opposite of minimize
 			return -f(x)
@@ -864,7 +864,7 @@ class Model:
 		self.log.print_(msg)
 		print(msg)
 
-		@jit(float64(float64[:]), nopython=False, parallel=True)
+		# @jit(float64(float64[:]), nopython=False, parallel=True)
 		def f(x):
 
 			models = dict()	    	
@@ -884,7 +884,7 @@ class Model:
 
 			return df['loss'].sum()
 			
-		@jit(float64(float64[:]), nopython=False, parallel=True)
+		# @jit(float64(float64[:]), nopython=False, parallel=True)
 		def objective(x):
 			# minus sign means the opposite of minimize
 			return f(x)
@@ -1135,329 +1135,379 @@ class Model:
 		status, error = self.check_status()
 
 		if status==1 and (error is None or error==''):
-			
-			if self.volume in self.features:
-				self.features.remove(self.volume)
 
-			# clean up the data
-
-			for file, player in zip(self.files,self.players):
-			
-				data = pd.read_csv(file,encoding='utf-16')
-				# data = pd.read_csv(file)
-				
-				# for demo purpose
-				# data = data[data.index>=data[data['Date']=='12 March, 2016'].index[0]] 
-
-				for col in self.features+[self.volume]:
-
-					data[col] = data[col].apply(lambda x: str(x).replace('$',''))
-					data[col] = data[col].astype(float)
-
-					if col in self.relative_features:
-
-						data[col] = np.where(data[self.volume]>0,data[col]/data[self.volume],0) 
-
-					if col==self.volume:
-
-						self.volume_per_player = pd.concat([self.volume_per_player,data['Units']],axis=1)
-						self.volume_per_player.rename(columns={'Units':player+'_volume'},inplace=True)
-	
-
-
-				self.df[player] = data
-
-
-			self.total_volume = self.volume_per_player.sum(axis=1)
-			
-			for col in self.volume_per_player.columns:
-
-				self.share_per_player[col] = self.volume_per_player[col]/self.total_volume
-
-
-			self.calculate_time(data.shape[0])
-
-			print(len(self.features),self.features)
-
-		# 	# optimization 			
-			self.choice_model_parameters = self.optimize_choice_model()			
-			print('self.choice_model_parameters:')
-			print(self.choice_model_parameters)
-			# self.choice_model_parameters.to_csv('choice_model.csv')
-			# self.choice_model_parameters = pd.read_csv('choice_model.csv',encoding='utf-8')
-			# print(self.choice_model_parameters)
-
-			# recalculate utility 
-			Utilities = dict()
-			for i, player in enumerate(self.players):
-
-				df = self.df[player][self.features]
-				df.insert(loc=0, column='Time', value=self.Time)
-				
-				params = np.array(self.choice_model_parameters[player])
-				
-				utility = np.exp(params[0]+(df.values*params[1:]).sum(axis=1))				
-
-				df['utility'] = utility
-
-
-				Utilities[player] = utility
-			
-			self.utilities = pd.DataFrame(Utilities)
-			self.utilities['total'] = self.utilities.sum(axis=1)
-
-			# print('self.utilities')
-			# print(self.utilities)			
-
-			self.shares = self.utilities.copy()
-			for col in self.shares.columns:
-
-				if col!='total':
-					self.shares[col] = self.shares[col]/self.shares['total']
-
-			if 'total' in self.shares.columns:
-				del self.shares['total']
-
-			# print('self.shares')
-			# print(self.shares)
-
-			self.errors = self.shares.copy()
-			self.errors = self.errors.applymap(np.log)
-
-			self.errors.reset_index(inplace=True)
-			self.volume_per_player.reset_index(inplace=True)
-
-			if 'index' in self.errors.columns:
-				del self.errors['index']
-
-			if 'index' in self.volume_per_player.columns:
-				del self.volume_per_player['index']
-
-			for i, col in enumerate(self.errors.columns):
-
-				self.errors[col] = self.errors[col]*self.volume_per_player.iloc[:,i]
-
-			# print('self.errors')
-			# print(self.errors)
-
-			self.calculate_market()
-
-			# print(self.market)
-
-			# optimization 			
-			self.market_parameters = self.optimize_market()
-			# self.market_parameters.to_csv('market.csv',index=False)
-			# self.market_parameters = pd.read_csv('market.csv',encoding='utf-8')
-			print('self.market_parameters:')
-			print(self.market_parameters)
-
-			#future market -- simulation
-			future_df = self.get_future()			
-			# future_df.to_csv('future_df.csv',index=False)
-
-			#forecasting model					
-			forecasts = future_df.apply(lambda x: self.market_parameters.values[0][0] + sum(self.market_parameters.values[0][1:]*x[1:])  ,axis=1 )
-			future_df['forecast'] = forecasts
-			future_df = future_df.tail(self.n_future)
-
-			latest_state = self.get_latest_state()
-
-			# simulation
 			try:
 
-				print('me:',self.me)
+				if self.volume in self.features:
+					self.features.remove(self.volume)
 
-				print('players:',self.players)
+				# clean up the data
 
-				print('prices:',self.prices)
+				for file, player in zip(self.files,self.players):
+				
+					data = pd.read_csv(file,encoding='utf-16')
+					# data = pd.read_csv(file)
+					
+					# for demo purpose
+					data = data[data.index>=data[data['Date']=='12 March, 2016'].index[0]] 
 
-				my_price = self.prices[self.players.index(self.me)]
+					for col in self.features+[self.volume]:
 
-				print('my_price:',my_price)
+						data[col] = data[col].apply(lambda x: str(x).replace('$',''))
+						data[col] = data[col].astype(float)
 
-				range_of_prices = self._range(my_price,self.price_inc,self.price_steps)
+						if col in self.relative_features:
 
-				print(range_of_prices)
-			
-				shares = self.shares.tail(1).values[0]
+							data[col] = np.where(data[self.volume]>0,data[col]/data[self.volume],0) 
 
-				print('shares:',shares)
+						if col==self.volume:
 
-				print('choice_model_parameters:')
-				print(self.choice_model_parameters)
-				self.choice_model_parameters.to_csv('choice_model_parameters.csv',index=False)
-
-				times = future_df['Time'].values
-				market_forecasts = future_df['forecast'].values
-
-				market_forecasts_dict = {k:v for k,v in zip(times,market_forecasts)}
-
-
-				# print('times:',times)
-				# print('market_forecasts:',market_forecasts)
-				print('market_forecasts_dict:',market_forecasts_dict)
+							self.volume_per_player = pd.concat([self.volume_per_player,data['Units']],axis=1)
+							self.volume_per_player.rename(columns={'Units':player+'_volume'},inplace=True)
+		
 
 
-				# update player price 
+					self.df[player] = data
+
+
+				self.total_volume = self.volume_per_player.sum(axis=1)
+				
+				for col in self.volume_per_player.columns:
+
+					self.share_per_player[col] = self.volume_per_player[col]/self.total_volume
+
+
+				self.calculate_time(data.shape[0])
+
+
+			# 	# optimization 			
+				self.choice_model_parameters = self.optimize_choice_model()			
+
+				#convert to json
+				choice_model_parameters = self.choice_model_parameters.copy()
+				# print('choice_model_parameters:')
+				# print(choice_model_parameters)
+				# print(choice_model_parameters['premium_brand'].to_dict())
+				# print(type(choice_model_parameters['premium_brand']))
+
+				# print(choice_model_parameters.loc[:,0])
+				# print(choice_model_parameters.index)
+				# choice_model_parameters.to_csv('choice_model_parameters.csv')
+				# print(choice_model_parameters[['index','premium_brand']])
+				# print('====================================')
+				# print(choice_model_parameters.columns)
+				# print('====================================')
+				# # choice_model_parameters.rename(columns={'Unnamed: 0':'features'},inplace=True)
+
+				choice_parameters_json = {}
 				for player in self.players:
-
-					# get player price
-					new_price = float(self.prices[self.players.index(player)])
-					# update player price
-					latest_state[player].loc[:,self.price_feature] = new_price
+				    
+				    choice_parameters_json[player] = {}
+				    choice_parameters_json[player] = choice_model_parameters[player].to_dict()
 
 
-				# print('latest_state:')
-				# print(latest_state)
 
-				# print('\n\n\n\n')
+				# print('self.choice_model_parameters:')
+				# print(self.choice_model_parameters)
+				# self.choice_model_parameters.to_csv('choice_model.csv')
+				# self.choice_model_parameters = pd.read_csv('choice_model.csv',encoding='utf-8')
+				# print(self.choice_model_parameters)
 
-				# generate simulation data
-				output = {}				
-				for time in times:					
 
-					# print(time)					
-					output[str(time)] = {}
 
-					for player in self.players:
+				# recalculate utility 
+				Utilities = dict()
+				for i, player in enumerate(self.players):
 
-						# print(player)
-						output[str(time)][player] = {}
+					df = self.df[player][self.features]
+					df.insert(loc=0, column='Time', value=self.Time)
+					
+					params = np.array(self.choice_model_parameters[player])
+					
+					utility = np.exp(params[0]+(df.values*params[1:]).sum(axis=1))				
 
-						if 'Time' in latest_state[player].columns:
+					df['utility'] = utility
 
-							latest_state[player]['Time'] = time
 
-						else:
-
-							latest_state[player].insert(0, 'Time', time)						
-						
-
-						tmp_df = pd.DataFrame()
-
-						rows = []
-
-						if player==self.me:		
-
-							for range_of_price in range_of_prices:
-
-								latest_state[player][self.price_feature] = range_of_price
-								# row = latest_state[player]
-								# print(row)
-								row = latest_state[player].to_json(orient="records")
-								row = json.loads(row)
-								# print(type(row))
-								# print(row)
-								rows.append(row[0])
-						else:		
-
-							# row = latest_state[player]
-							row = latest_state[player].to_json(orient="records")
-							row = json.loads(row)								
-							# print(row)
-							rows.append(row[0])
-
-						# print(rows)
-
-						output[str(time)][player]['data'] = rows
-
-						# print('--------------------------------')
-
-					# print('=====================================')
-
-				# print(output)
-				# end of generate simulation data
+					Utilities[player] = utility
 				
-				# do simulation 
+				self.utilities = pd.DataFrame(Utilities)
+				self.utilities['total'] = self.utilities.sum(axis=1)
 
-				utilities = {}
-				utilities_df = pd.DataFrame()
-				for key in output.keys():
+				# print('self.utilities:')
+				# print(self.utilities)			
 
-					# print('key:',key)
+				self.shares = self.utilities.copy()
+				for col in self.shares.columns:
 
-					utilities[str(key)] = {}
+					if col!='total':
+						self.shares[col] = self.shares[col]/self.shares['total']
 
-					my_rows = output[str(key)][self.me]['data']
+				if 'total' in self.shares.columns:
+					del self.shares['total']
 
-					for my_row in my_rows:
+				# print('self.shares')
+				# print(self.shares)
 
-						utilities[str(key)][str(my_row[self.price_feature])] = {}
+				self.errors = self.shares.copy()
+				self.errors = self.errors.applymap(np.log)
 
-						# print(my_row)
+				self.errors.reset_index(inplace=True)
+				self.volume_per_player.reset_index(inplace=True)
 
-						# print(list(my_row.values()))
-						# print(self.choice_model_parameters[self.me].values)
-						utility = self.calculate_utility(self.choice_model_parameters[self.me].values,list(my_row.values()))
-						# print('utility:',utility)
+				if 'index' in self.errors.columns:
+					del self.errors['index']
 
-						utilities[str(key)][str(my_row[self.price_feature])][self.me] = utility
+				if 'index' in self.volume_per_player.columns:
+					del self.volume_per_player['index']
 
-						#get other player data						
-						for player in self.players:
+				for i, col in enumerate(self.errors.columns):
 
-							if player!=self.me:
+					self.errors[col] = self.errors[col]*self.volume_per_player.iloc[:,i]
 
-								row = output[str(key)][player]['data']
-								row = list(row[0].values())
+				# print('self.errors')
+				# print(self.errors)
 
-								utility = self.calculate_utility(self.choice_model_parameters[player].values,row)
-								utilities[str(key)][str(my_row[self.price_feature])][player] = utility
+				self.calculate_market()
 
+				# print(self.market)
 
-						
-						row = utilities[str(key)][str(my_row[self.price_feature])]
-						row.update({'at_time':float(key),'at_price':float(my_row[self.price_feature])})
-						
-						utilities_df =utilities_df.append(row, ignore_index=True)
+				# optimization 			
+				self.market_parameters = self.optimize_market()
 
-						
-										
-				utilities_df['market_forecast'] = utilities_df['at_time'].map(market_forecasts_dict)
-				utilities_df['cogs'] = self.cogs
-				utilities_df = utilities_df[['at_time','at_price','market_forecast','cogs']+self.players]											
-				# utilities_df.to_csv('utilities_df.csv',index=False)
+				# print('self.market_parameters:',self.market_parameters)
+				# print(type(self.market_parameters))
+				market_parameters_json = self.market_parameters.to_dict('index')[0]
 
-				for player in self.players:				
+				# self.market_parameters.to_csv('market.csv',index=False)
+				# self.market_parameters = pd.read_csv('market.csv',encoding='utf-8')
+				# print('self.market_parameters:')
+				# print(self.market_parameters)
 
-					utilities_df['total'] = utilities_df[self.players].apply(lambda x: sum(x), axis=1)   
-					utilities_df['share_'+player] = utilities_df[player]/utilities_df['total']
+				# #future market -- simulation
+				# future_df = self.get_future()			
+				# # future_df.to_csv('future_df.csv',index=False)
 
-					# volume
-					utilities_df['volume_'+player] = utilities_df['share_'+player]*utilities_df['market_forecast']
+				# #forecasting model					
+				# forecasts = future_df.apply(lambda x: self.market_parameters.values[0][0] + sum(self.market_parameters.values[0][1:]*x[1:])  ,axis=1 )
+				# future_df['forecast'] = forecasts
+				# # future_df = future_df.tail(self.n_future)
 
-					if player==self.me:
+				# print('future_df:')
+				# print(future_df)
 
-						utilities_df['revenue_'+player] = utilities_df['at_price']*utilities_df['volume_'+player]
-						utilities_df['profit_'+player] = (utilities_df['at_price']-self.cogs)*utilities_df['volume_'+player]
+				# latest_state = self.get_latest_state()
 
-				# print(utilities_df)
-	
-				utilities_df.to_csv('utilities_df.csv',index=False)	
+				# print('latest_state:',latest_state)
+
+				result = {}
+				result['market_parameters'] = market_parameters_json
+				result['choice_model_parameters'] = choice_parameters_json
+
+				# # simulation
+				# try:
+
+				# 	print('me:',self.me)
+
+				# 	print('players:',self.players)
+
+				# 	print('prices:',self.prices)
+
+				# 	my_price = self.prices[self.players.index(self.me)]
+
+				# 	print('my_price:',my_price)
+
+				# 	range_of_prices = self._range(my_price,self.price_inc,self.price_steps)
+
+				# 	print(range_of_prices)
 				
-				# query the output
+				# 	shares = self.shares.tail(1).values[0]
 
-				print('obj:',self.obj)
-				print('cons:',self.cons)				
+				# 	print('shares:',shares)
 
-				output = self.query(times,utilities_df,self.obj,self.cons)												
-				result = [output]
+				# 	print('choice_model_parameters:')
+				# 	print(self.choice_model_parameters)
+				# 	self.choice_model_parameters.to_csv('choice_model_parameters.csv',index=False)
 
-				# result = json.dumps([output])
+				# 	times = future_df['Time'].values
+				# 	market_forecasts = future_df['forecast'].values
 
-				# end of query the output
+				# 	market_forecasts_dict = {k:v for k,v in zip(times,market_forecasts)}
 
 
+				# 	# print('times:',times)
+				# 	# print('market_forecasts:',market_forecasts)
+				# 	print('market_forecasts_dict:',market_forecasts_dict)
+
+
+				# 	# update player price 
+				# 	for player in self.players:
+
+				# 		# get player price
+				# 		new_price = float(self.prices[self.players.index(player)])
+				# 		# update player price
+				# 		latest_state[player].loc[:,self.price_feature] = new_price
+
+
+				# 	# print('latest_state:')
+				# 	# print(latest_state)
+
+				# 	# print('\n\n\n\n')
+
+				# 	# generate simulation data
+				# 	output = {}				
+				# 	for time in times:					
+
+				# 		# print(time)					
+				# 		output[str(time)] = {}
+
+				# 		for player in self.players:
+
+				# 			# print(player)
+				# 			output[str(time)][player] = {}
+
+				# 			if 'Time' in latest_state[player].columns:
+
+				# 				latest_state[player]['Time'] = time
+
+				# 			else:
+
+				# 				latest_state[player].insert(0, 'Time', time)						
+							
+
+				# 			tmp_df = pd.DataFrame()
+
+				# 			rows = []
+
+				# 			if player==self.me:		
+
+				# 				for range_of_price in range_of_prices:
+
+				# 					latest_state[player][self.price_feature] = range_of_price
+				# 					# row = latest_state[player]
+				# 					# print(row)
+				# 					row = latest_state[player].to_json(orient="records")
+				# 					row = json.loads(row)
+				# 					# print(type(row))
+				# 					# print(row)
+				# 					rows.append(row[0])
+				# 			else:		
+
+				# 				# row = latest_state[player]
+				# 				row = latest_state[player].to_json(orient="records")
+				# 				row = json.loads(row)								
+				# 				# print(row)
+				# 				rows.append(row[0])
+
+				# 			# print(rows)
+
+				# 			output[str(time)][player]['data'] = rows
+
+				# 			# print('--------------------------------')
+
+				# 		# print('=====================================')
+
+				# 	# print(output)
+				# 	# end of generate simulation data
+					
+				# 	# do simulation 
+
+				# 	utilities = {}
+				# 	utilities_df = pd.DataFrame()
+				# 	for key in output.keys():
+
+				# 		# print('key:',key)
+
+				# 		utilities[str(key)] = {}
+
+				# 		my_rows = output[str(key)][self.me]['data']
+
+				# 		for my_row in my_rows:
+
+				# 			utilities[str(key)][str(my_row[self.price_feature])] = {}
+
+				# 			# print(my_row)
+
+				# 			# print(list(my_row.values()))
+				# 			# print(self.choice_model_parameters[self.me].values)
+				# 			utility = self.calculate_utility(self.choice_model_parameters[self.me].values,list(my_row.values()))
+				# 			# print('utility:',utility)
+
+				# 			utilities[str(key)][str(my_row[self.price_feature])][self.me] = utility
+
+				# 			#get other player data						
+				# 			for player in self.players:
+
+				# 				if player!=self.me:
+
+				# 					row = output[str(key)][player]['data']
+				# 					row = list(row[0].values())
+
+				# 					utility = self.calculate_utility(self.choice_model_parameters[player].values,row)
+				# 					utilities[str(key)][str(my_row[self.price_feature])][player] = utility
+
+
+							
+				# 			row = utilities[str(key)][str(my_row[self.price_feature])]
+				# 			row.update({'at_time':float(key),'at_price':float(my_row[self.price_feature])})
+							
+				# 			utilities_df =utilities_df.append(row, ignore_index=True)
+
+							
+											
+				# 	utilities_df['market_forecast'] = utilities_df['at_time'].map(market_forecasts_dict)
+				# 	utilities_df['cogs'] = self.cogs
+				# 	utilities_df = utilities_df[['at_time','at_price','market_forecast','cogs']+self.players]											
+				# 	# utilities_df.to_csv('utilities_df.csv',index=False)
+
+				# 	for player in self.players:				
+
+				# 		utilities_df['total'] = utilities_df[self.players].apply(lambda x: sum(x), axis=1)   
+				# 		utilities_df['share_'+player] = utilities_df[player]/utilities_df['total']
+
+				# 		# volume
+				# 		utilities_df['volume_'+player] = utilities_df['share_'+player]*utilities_df['market_forecast']
+
+				# 		if player==self.me:
+
+				# 			utilities_df['revenue_'+player] = utilities_df['at_price']*utilities_df['volume_'+player]
+				# 			utilities_df['profit_'+player] = (utilities_df['at_price']-self.cogs)*utilities_df['volume_'+player]
+
+				# 	# print(utilities_df)
+		
+				# 	utilities_df.to_csv('utilities_df.csv',index=False)	
+					
+				# 	# query the output
+
+				# 	print('obj:',self.obj)
+				# 	print('cons:',self.cons)				
+
+				# 	output = self.query(times,utilities_df,self.obj,self.cons)												
+				# 	result = [output]
+
+				# 	# result = json.dumps([output])
+
+				# 	# end of query the output
+
+
+
+				# except Exception as e:
+
+				# 	msg = 'Error when do simulation.'
+				# 	self.log.print_(msg)
+				# 	print(msg)
+
+				# 	status = 0	
+				# 	error = msg
 
 			except Exception as e:
 
-				msg = 'Error when do simulation.'
+				msg = 'Error when do modeling.'
 				self.log.print_(msg)
 				print(msg)
 
 				status = 0	
 				error = msg
-
 
 
 
@@ -1474,6 +1524,9 @@ class Model:
 		else:
 
 			return_["data"] = None			
+
+		# print('return_:',return_)
+
 
 		return_json = json.dumps(return_)
 
