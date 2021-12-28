@@ -24,8 +24,8 @@ def curl_request(url,method,headers,payloads):
 if __name__ == '__main__':
 
 	# local url
-	url = config.LOCAL_URL
-	# url = config.HEROKU_URL
+	# url = config.LOCAL_URL
+	url = config.HEROKU_URL
 	# url = config.DEV_URL
 
 	method = 'POST'
@@ -48,8 +48,8 @@ if __name__ == '__main__':
 	price_inc = 0.10 
 	price_steps = 13 
 	cogs = 2.5 
-	obj = "max share" 
-	cons = "share > 0.15"
+	obj = "max profit" 
+	cons = "volume > 5500"
 
 	# without constrain
 

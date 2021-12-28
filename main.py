@@ -25,10 +25,6 @@ if __name__== '__main__':
 	
 	today = None
 
-	# input files
-	# player names
-	# features 
-
 
 	parser = argparse.ArgumentParser()	
 	parser.add_argument("--env", "-e", help="State the environment", required=True)	
@@ -180,7 +176,7 @@ if __name__== '__main__':
 	msg = __name__+'.'+utils.get_function_caller()
 	log.print_(msg)
 
-	
+
 	if files is not None and players is not None and features is not None:
 
 		model = Model(env, files, players, me, features, volume,relative_features, price_feature,n_period_after_the_last_date,data_period,n_future,prices,price_inc,price_steps,cogs,obj,constraint)		
