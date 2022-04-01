@@ -42,6 +42,7 @@ def test_api(app, client):
 	# data_json = json.loads(data)
 
 	send_request = client.post(url_, data=data, follow_redirects=True)
+	print(send_request)
 	assert send_request.status_code == 200
 
 	function = 'choice_model'
@@ -51,4 +52,5 @@ def test_api(app, client):
 	# data_json = json.loads(data)
 
 	send_request = client.post(url_, data=data, follow_redirects=True)
+	print(send_request)
 	assert send_request.status_code == 200
