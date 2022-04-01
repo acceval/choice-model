@@ -35,7 +35,7 @@ def test_api(app, client):
 
 	# assert True
 
-	function = 'choice_model'
+	function = 'choice_model/'
 	url_ = url+function
 	data = '{"files" :'+str(files)+', "me":"'+str(me)+'","players":'+str(players)+', "features":'+str(features)+', "volume":"'+volume+'", "relative_features":'+str(relative_features)+', "price_feature":"'+str(price_feature)+'", "data_period":"'+str(data_period)+'", "n_period_after_the_last_date":"'+str(n_period_after_the_last_date)+'", "n_future":"'+str(n_future)+'","prices":'+str(prices)+',"price_inc":"'+str(price_inc)+'","price_steps":"'+str(price_steps)+'","cogs":"'+str(cogs)+'","obj":"'+str(obj)+'"}'
 	data = data.replace("'",'"')
@@ -45,7 +45,7 @@ def test_api(app, client):
 	print(send_request)
 	assert send_request.status_code == 200
 
-	function = 'choice_model'
+	function = 'choice_model/'
 	url_ = url+function
 	data = '{"files" :'+str(files)+', "me":"'+str(me)+'","players":'+str(players)+', "features":'+str(features)+', "volume":"'+volume+'", "relative_features":'+str(relative_features)+', "price_feature":"'+str(price_feature)+'", "data_period":"'+str(data_period)+'", "n_period_after_the_last_date":"'+str(n_period_after_the_last_date)+'", "n_future":"'+str(n_future)+'","prices":'+str(prices)+',"price_inc":"'+str(price_inc)+'","price_steps":"'+str(price_steps)+'","cogs":"'+str(cogs)+'","obj":"'+str(obj)+'","cons":"'+str(cons)+'"}'
 	data = data.replace("'",'"')
